@@ -39,7 +39,7 @@ vendor/bin/phpunit tests
 ```
 
 ## Handing in the assessment
-When you're finished developing the application you can send it to us in reply of the mail you got with this assessment.
+When you're finished developing the application and did all the git commits, you can zip the entire folder (don't forget the .git), and send it to us in reply of the mail you got with this assessment.
 
 ## Good luck
 And again if you have any questions, [let us know][contact]!
