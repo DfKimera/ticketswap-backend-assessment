@@ -51,6 +51,6 @@ final class Marketplace
 
     public function setListingForSale(Listing $listing) : void
     {
-
+    	array_push($this->listingsForSale, $listing);
     }
 }
