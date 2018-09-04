@@ -40,7 +40,23 @@ class ListingTest extends TestCase
      */
     public function it_should_not_be_possible_to_create_a_listing_with_duplicate_barcodes()
     {
-        $this->markTestSkipped('Needs to be implemented');
+	    $listing = new Listing(
+		    new ListingId('D59FDCCC-7713-45EE-A050-8A553A0F1169'),
+		    new Seller('Pascal'),
+		    [
+			    new Ticket(
+				    new TicketId('6293BB44-2F5F-4E2A-ACA8-8CDF01AF401B'),
+				    new Barcode('EAN-13', '38974312923')
+			    ),
+			    new Ticket(
+				    new TicketId('C4E7733A-9836-42BC-941A-182357F95231'),
+				    new Barcode('EAN-13', '38974312923')
+			    ),
+		    ],
+		    new Money(4950, new Currency('EUR'))
+	    );
+
+	    $this->assertCount(1, $listing->getTickets());
     }
 
     /**

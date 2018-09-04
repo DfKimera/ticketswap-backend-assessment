@@ -30,8 +30,9 @@ final class Listing
     {
         $this->id = $id;
         $this->seller = $seller;
-        $this->tickets = $tickets;
         $this->price = $price;
+
+        $this->setTickets($tickets);
     }
 
     public function getId() : ListingId
@@ -42,6 +43,15 @@ final class Listing
     public function getSeller() : Seller
     {
         return $this->seller;
+    }
+
+    protected function setTickets(array $tickets)
+    {
+    	$this->tickets = collect($tickets)
+		    ->unique(function (Ticket $ticket) {
+		    	return strval($ticket->getBarcode());
+		    })
+		    ->toArray();
     }
 
     public function getTickets(?bool $forSale = null) : array
