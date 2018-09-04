@@ -19,15 +19,34 @@ final class Marketplace
         return $this->listingsForSale;
     }
 
+    public function findTicketById(TicketId $ticketId) : ?Ticket
+    {
+    	// TODO: this belongs in a repository
+
+    	return collect($this->listingsForSale)
+		    ->map(function (Listing $listing) {
+			    return $listing->getTickets();
+		    })
+		    ->collapse()
+		    ->first(function (Ticket $ticket) use ($ticketId) {
+			    return $ticket->getId()->equals($ticketId);
+		    });
+    }
+
     public function buyTicket(Buyer $buyer, TicketId $ticketId) : Ticket
     {
-        foreach($this->listingsForSale as $listing) {
-            foreach($listing->getTickets() as $ticket) {
-                if ($ticket->getId()->equals($ticketId)) {
-                   return $ticket->buyTicket($buyer); 
-                }
-            }
+        $ticketBeingSold = $this->findTicketById($ticketId);
+
+        if(null === $ticketBeingSold) {
+	        throw TicketNotFoundException::withTicketId($ticketId);
         }
+
+        if($ticketBeingSold->isBought()) {
+        	throw TicketAlreadySoldException::withTicket($ticketBeingSold);
+        }
+
+        return $ticketBeingSold->buyTicket($buyer);
+
     }
 
     public function setListingForSale(Listing $listing) : void
