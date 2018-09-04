@@ -56,27 +56,16 @@ final class Listing
 
     public function getTickets(?bool $forSale = null) : array
     {
-        if (true === $forSale) {
-            $forSaleTickets = [];
-            foreach ($this->tickets as $ticket) {
-                if (!$ticket->isBought()) {
-                    $forSaleTickets[] = $ticket;
-                }
-            }
+    	if($forSale === null) {
+    		return $this->tickets;
+	    }
 
-            return $forSaleTickets;
-        } else if (false === $forSale) {
-            $notForSaleTickets = [];
-            foreach ($this->tickets as $ticket) {
-                if ($ticket->isBought()) {
-                    $notForSaleTickets[] = $ticket;
-                }
-            }
-
-            return $notForSaleTickets;
-        } else {
-            return $this->tickets;
-        }
+	    return collect($this->tickets)
+		    ->filter(function (Ticket $ticket) use ($forSale) {
+		    	return $ticket->isBought() !== $forSale;
+		    })
+		    ->values()
+		    ->toArray();
     }
 
     public function getPrice() : Money
