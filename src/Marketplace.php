@@ -19,6 +19,16 @@ final class Marketplace
         return $this->listingsForSale;
     }
 
+    public function findListingById(ListingId $listingId) : ?Listing
+    {
+    	// TODO: this belongs in a repository
+
+    	return collect($this->listingsForSale)
+		    ->first(function (Listing $listing) use ($listingId) {
+			    return $listing->getId()->equals($listingId);
+		    });
+    }
+
     public function findTicketById(TicketId $ticketId) : ?Ticket
     {
     	// TODO: this belongs in a repository
@@ -30,6 +40,20 @@ final class Marketplace
 		    ->collapse()
 		    ->first(function (Ticket $ticket) use ($ticketId) {
 			    return $ticket->getId()->equals($ticketId);
+		    });
+    }
+
+    public function findListingWithTicket(TicketId $ticketId) : ?Listing
+    {
+    	// TODO: this belongs in a repository
+
+    	return collect($this->listingsForSale)
+		    ->first(function (Listing $listing) use ($ticketId) {
+
+		    	return collect($listing->getTickets(true))
+				    ->contains(function (Ticket $ticket) use ($ticketId) {
+			            return $ticket->getId()->equals($ticketId);
+				    });
 		    });
     }
 
@@ -52,6 +76,7 @@ final class Marketplace
     public function buyTicket(Buyer $buyer, TicketId $ticketId) : Ticket
     {
         $ticketBeingSold = $this->findTicketById($ticketId);
+        $ticketListing = $this->findListingWithTicket($ticketId);
 
         if(null === $ticketBeingSold) {
 	        throw TicketNotFoundException::withTicketId($ticketId);
@@ -61,11 +86,15 @@ final class Marketplace
         	throw TicketAlreadySoldException::withTicket($ticketBeingSold);
         }
 
+        if(!$ticketListing->isVerified()) {
+        	throw ListingNotVerifiedException::withListing($ticketListing);
+        }
+
         return $ticketBeingSold->buyTicket($buyer);
 
     }
 
-    public function setListingForSale(Listing $listing) : void
+    public function setListingForSale(Listing $listing) : Listing
     {
     	$marketplace = $this;
 
@@ -88,5 +117,16 @@ final class Marketplace
 		    });
 
     	array_push($this->listingsForSale, $listing);
+
+    	return $listing;
+    }
+
+    public function verifyListingByAdmin(ListingId $listingId, Admin $admin) : Listing
+    {
+    	$listing = $this->findListingById($listingId);
+
+    	$listing->setVerifier($admin);
+
+    	return $listing;
     }
 }

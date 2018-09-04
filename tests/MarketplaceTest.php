@@ -5,10 +5,12 @@ namespace TicketSwap\Assessment\tests;
 use PHPUnit\Framework\TestCase;
 use Money\Currency;
 use Money\Money;
+use TicketSwap\Assessment\Admin;
 use TicketSwap\Assessment\Barcode;
 use TicketSwap\Assessment\Buyer;
 use TicketSwap\Assessment\Listing;
 use TicketSwap\Assessment\ListingId;
+use TicketSwap\Assessment\ListingNotVerifiedException;
 use TicketSwap\Assessment\Marketplace;
 use TicketSwap\Assessment\Seller;
 use TicketSwap\Assessment\Ticket;
@@ -61,7 +63,8 @@ class MarketplaceTest extends TestCase
                             new Barcode('EAN-13', '38974312923')
                         ),
                     ],
-                    new Money(4950, new Currency('EUR'))
+                    new Money(4950, new Currency('EUR')),
+	                new Admin('Root')
                 ),
             ]
         );
@@ -91,7 +94,8 @@ class MarketplaceTest extends TestCase
 							new Barcode('EAN-13', '38974312923')
 						),
 					],
-					new Money(4950, new Currency('EUR'))
+					new Money(4950, new Currency('EUR')),
+					new Admin('Root')
 				),
 			]
 		);
@@ -121,7 +125,8 @@ class MarketplaceTest extends TestCase
                             new Barcode('EAN-13', '38974312923')
                         ),
                     ],
-                    new Money(4950, new Currency('EUR'))
+                    new Money(4950, new Currency('EUR')),
+	                new Admin('Root')
                 ),
             ]
         );
@@ -182,6 +187,37 @@ class MarketplaceTest extends TestCase
         $this->assertCount(2, $listingsForSale);
     }
 
+	/**
+	 * @test
+	 */
+    public function it_should_be_able_for_an_admin_to_verify_a_listing()
+    {
+
+    	$listing = new Listing(
+		    new ListingId('D59FDCCC-7713-45EE-A050-8A553A0F1169'),
+		    new Seller('Pascal'),
+		    [
+			    new Ticket(
+				    new TicketId('6293BB44-2F5F-4E2A-ACA8-8CDF01AF401B'),
+				    new Barcode('EAN-13', '38974312923')
+			    ),
+		    ],
+		    new Money(4950, new Currency('EUR'))
+	    );
+
+
+	    $marketplace = new Marketplace([$listing]);
+
+    	$this->assertFalse($listing->isVerified());
+
+	    $marketplace->verifyListingByAdmin(
+		    new ListingId('D59FDCCC-7713-45EE-A050-8A553A0F1169'),
+		    new Admin('John')
+	    );
+
+	    $this->assertTrue($listing->isVerified());
+    }
+
     /**
      * @test
      */
@@ -237,7 +273,8 @@ class MarketplaceTest extends TestCase
 				    new ListingId('D59FDCCC-7713-45EE-A050-8A553A0F1169'),
 				    new Seller('Pascal'),
 				    [$ticket],
-				    new Money(4950, new Currency('EUR'))
+				    new Money(4950, new Currency('EUR')),
+				    new Admin('Root')
 			    ),
 		    ]
 	    );
@@ -259,6 +296,11 @@ class MarketplaceTest extends TestCase
 		    )
 	    );
 
+	    $marketplace->verifyListingByAdmin(
+	    	new ListingId('26A7E5C4-3F59-4B3C-B5EB-6F2718BC31AD'),
+		    new Admin('John')
+	    );
+
 	    $listingsForSale = $marketplace->getListingsForSale();
 
 	    $this->assertCount(2, $listingsForSale);
@@ -278,6 +320,36 @@ class MarketplaceTest extends TestCase
 			    [$ticket],
 			    new Money(4950, new Currency('EUR'))
 		    )
+	    );
+
+    }
+
+	/**
+	 * @test
+	 */
+    public function it_should_not_be_possible_to_buy_ticket_from_unverified_listing()
+    {
+	    $marketplace = new Marketplace(
+		    [
+			    new Listing(
+				    new ListingId('D59FDCCC-7713-45EE-A050-8A553A0F1169'),
+				    new Seller('Pascal'),
+				    [
+					    new Ticket(
+						    new TicketId('6293BB44-2F5F-4E2A-ACA8-8CDF01AF401B'),
+						    new Barcode('EAN-13', '38974312923')
+					    ),
+				    ],
+				    new Money(4950, new Currency('EUR'))
+			    ),
+		    ]
+	    );
+
+	    $this->expectException(ListingNotVerifiedException::class);
+
+	    $marketplace->buyTicket(
+		    new Buyer('Tom'),
+		    new TicketId('6293BB44-2F5F-4E2A-ACA8-8CDF01AF401B')
 	    );
 
     }

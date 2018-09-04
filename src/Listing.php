@@ -26,11 +26,17 @@ final class Listing
      */
     private $price;
 
-    public function __construct(ListingId $id, Seller $seller, array $tickets, Money $price)
+	/**
+	 * @var Admin
+	 */
+    private $verifier;
+
+    public function __construct(ListingId $id, Seller $seller, array $tickets, Money $price, ?Admin $verifier = null)
     {
         $this->id = $id;
         $this->seller = $seller;
         $this->price = $price;
+        $this->verifier = $verifier;
 
         $this->setTickets($tickets);
     }
@@ -44,6 +50,18 @@ final class Listing
     {
         return $this->seller;
     }
+
+    public function isVerified() : bool
+    {
+    	return $this->verifier !== null;
+    }
+
+	public function setVerifier(Admin $admin) : self
+	{
+		$this->verifier = $admin;
+
+		return $this;
+	}
 
     protected function setTickets(array $tickets)
     {

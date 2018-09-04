@@ -18,4 +18,9 @@ final class ListingId
     {
         return $this->id;
     }
+
+    public function equals(ListingId $listingId) : bool
+    {
+    	return $this->id === $listingId->id;
+    }
 }
