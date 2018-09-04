@@ -18,4 +18,9 @@ final class Seller
     {
         return $this->name;
     }
+
+    public function isPreviousBuyer(Buyer $buyer)
+    {
+    	return $this->name === $buyer->getName();
+    }
 }

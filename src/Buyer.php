@@ -18,4 +18,9 @@ final class Buyer
     {
         return $this->name;
     }
+
+    public function getName() : string
+    {
+    	return $this->name;
+    }
 }

@@ -20,6 +20,11 @@ final class Barcode
         $this->value = $value;
     }
 
+    public function equals(Barcode $barcode) : bool
+    {
+    	return $this->type === $barcode->type && $this->value === $barcode->value;
+    }
+
     public function __toString() : string
     {
         return sprintf('%s:%s', $this->type, $this->value);

@@ -46,6 +46,13 @@ final class Ticket
         return $this->buyer !== null;
     }
 
+    public function resetBuyer() : self
+    {
+    	$this->buyer = null;
+
+    	return $this;
+    }
+
     public function buyTicket(Buyer $buyer) : self
     {
         $this->buyer = $buyer;

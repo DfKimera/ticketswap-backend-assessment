@@ -15,6 +15,7 @@ use TicketSwap\Assessment\Ticket;
 use TicketSwap\Assessment\TicketAlreadySoldException;
 use TicketSwap\Assessment\TicketId;
 use TicketSwap\Assessment\TicketNotFoundException;
+use TicketSwap\Assessment\TicketWithSameBarcodeExistsException;
 
 class MarketplaceTest extends TestCase
 {
@@ -186,7 +187,37 @@ class MarketplaceTest extends TestCase
      */
     public function it_should_not_be_possible_to_sell_a_ticket_with_a_barcode_that_is_already_for_sale()
     {
-        $this->markTestSkipped('Needs to be implemented');
+	    $marketplace = new Marketplace(
+		    [
+			    new Listing(
+				    new ListingId('D59FDCCC-7713-45EE-A050-8A553A0F1169'),
+				    new Seller('Pascal'),
+				    [
+					    new Ticket(
+						    new TicketId('6293BB44-2F5F-4E2A-ACA8-8CDF01AF401B'),
+						    new Barcode('EAN-13', '38974312923')
+					    ),
+				    ],
+				    new Money(4950, new Currency('EUR'))
+			    ),
+		    ]
+	    );
+
+	    $this->expectException(TicketWithSameBarcodeExistsException::class);
+
+	    $marketplace->setListingForSale(
+		    new Listing(
+			    new ListingId('26A7E5C4-3F59-4B3C-B5EB-6F2718BC31AD'),
+			    new Seller('Tom'),
+			    [
+				    new Ticket(
+					    new TicketId('45B96761-E533-4925-859F-3CA62182848E'),
+					    new Barcode('EAN-13', '38974312923')
+				    ),
+			    ],
+			    new Money(4950, new Currency('EUR'))
+		    )
+	    );
     }
 
     /**
@@ -194,6 +225,60 @@ class MarketplaceTest extends TestCase
      */
     public function it_should_be_possible_for_a_buyer_of_a_ticket_to_sell_it_again()
     {
-        $this->markTestSkipped('Needs to be implemented');
+
+    	$ticket = new Ticket(
+		    new TicketId('6293BB44-2F5F-4E2A-ACA8-8CDF01AF401B'),
+		    new Barcode('EAN-13', '38974312923')
+	    );
+
+	    $marketplace = new Marketplace(
+		    [
+			    new Listing(
+				    new ListingId('D59FDCCC-7713-45EE-A050-8A553A0F1169'),
+				    new Seller('Pascal'),
+				    [$ticket],
+				    new Money(4950, new Currency('EUR'))
+			    ),
+		    ]
+	    );
+
+	    $firstPurchase = $marketplace->buyTicket(
+		    new Buyer('Sarah'),
+		    new TicketId('6293BB44-2F5F-4E2A-ACA8-8CDF01AF401B')
+	    );
+
+	    $this->assertNotNull($firstPurchase);
+	    $this->assertSame('EAN-13:38974312923', (string) $firstPurchase->getBarcode());
+
+	    $marketplace->setListingForSale(
+		    new Listing(
+			    new ListingId('26A7E5C4-3F59-4B3C-B5EB-6F2718BC31AD'),
+			    new Seller('Sarah'),
+			    [$ticket],
+			    new Money(4950, new Currency('EUR'))
+		    )
+	    );
+
+	    $listingsForSale = $marketplace->getListingsForSale();
+
+	    $this->assertCount(2, $listingsForSale);
+
+	    $secondPurchase = $marketplace->buyTicket(
+		    new Buyer('Tom'),
+		    new TicketId('6293BB44-2F5F-4E2A-ACA8-8CDF01AF401B')
+	    );
+
+	    $this->assertNotNull($secondPurchase);
+	    $this->assertSame('EAN-13:38974312923', (string) $secondPurchase->getBarcode());
+
+	    $marketplace->setListingForSale(
+		    new Listing(
+			    new ListingId('F67A208C-8FE4-4711-B165-35601FFECB7E'),
+			    new Seller('Tom'),
+			    [$ticket],
+			    new Money(4950, new Currency('EUR'))
+		    )
+	    );
+
     }
 }
